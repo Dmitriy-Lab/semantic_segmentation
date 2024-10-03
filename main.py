@@ -1,24 +1,24 @@
 pip install opendatasets
 
-import tensorflow as tf                                                               # библиотека Tensorflow
-import keras                                                                          # библиотека Keras
-from keras.layers import Input, Conv2D, MaxPooling2D, Activation, ReLU, Rescaling     # cлои библиотеки Keras
-from keras.layers import BatchNormalization, Conv2DTranspose, Concatenate             # cлои библиотеки Keras
-from keras.layers import Rescaling, Resizing                                          # cлои библиотеки Keras
-from keras.models import Model, Sequential                                            # конструкторы построения моделей библиотеки Keras
+import tensorflow as tf                                                               
+import keras                                                                          
+from keras.layers import Input, Conv2D, MaxPooling2D, Activation, ReLU, Rescaling     
+from keras.layers import BatchNormalization, Conv2DTranspose, Concatenate             
+from keras.layers import Rescaling, Resizing                                          
+from keras.models import Model, Sequential                                            
 
-from keras.optimizers import Adam                                                     # оптимизатор Adam
-from keras.preprocessing.image import  load_img                                       # загрузка изображений
-from keras.utils import to_categorical                                                # преобразует вектор класса (целые числа) в двоичную матрицу класса
+from keras.optimizers import Adam                                                     
+from keras.preprocessing.image import  load_img                                       
+from keras.utils import to_categorical                                                
 
-import random                                                                         # генератор случайных чисел
+import random                                                                         
 
-import numpy as np                                                                    # библиотека линейной алгебры
-import pandas as pd                                                                   # библиотека обработки табличных данных
-import os                                                                             # библиотека работы с функциями операционной системы, в том числе с файлами
-import albumentations as A                                                            # библиотека аугментации изображений (https://albumentations.ai/)
+import numpy as np                                                                    
+import pandas as pd                                                                   
+import os                                                                             
+import albumentations as A                                                            
 
-import matplotlib.pyplot as plt                                                       # библиотека для рисования графиков
+import matplotlib.pyplot as plt                                                       
 import opendatasets as op
 
 op.download("https://www.kaggle.com/datasets/tawsifurrahman/covid19-radiography-database/")
@@ -35,23 +35,23 @@ def display(display_list):
   for i in range(len(display_list)):
     plt.subplot(1, len(display_list), i+1)
     plt.title(title[i])
-    plt.imshow(tf.keras.utils.array_to_img(display_list[0]))            # отображаем картинку
-    plt.imshow(tf.keras.utils.array_to_img(display_list[i]),alpha=0.5)  # отображаем маску с прозрачностью 50%
+    plt.imshow(tf.keras.utils.array_to_img(display_list[0]))            
+    plt.imshow(tf.keras.utils.array_to_img(display_list[i]),alpha=0.5)  
     plt.axis('off')
-  plt.show()                                                            # выводим график целиком
+  plt.show()                                                            
 
-original_image = os.path.join(dataset_path, image_dir, 'Normal-2.png')       # путь до ориганального изображения
-label_image_semantic = os.path.join(dataset_path, label_dir, 'Normal-2.png') # путь до маски
+original_image = os.path.join(dataset_path, image_dir, 'Normal-2.png')       
+label_image_semantic = os.path.join(dataset_path, label_dir, 'Normal-2.png') 
 
-fig, axs = plt.subplots(1, 2, figsize=(16, 8))                          # задаем область для построения (канвас)
+fig, axs = plt.subplots(1, 2, figsize=(16, 8))                          
 
-img = np.array(load_img(original_image, target_size=(256, 256), color_mode='rgb'))   # загружаем оригинальное изображение как RGB с 3 каналами
-mask = np.array(load_img(label_image_semantic, target_size=(256, 256), color_mode='grayscale'))  # загружаем маску как "отеннки серого", т.е. в один канал
+img = np.array(load_img(original_image, target_size=(256, 256), color_mode='rgb'))   
+mask = np.array(load_img(label_image_semantic, target_size=(256, 256), color_mode='grayscale'))  
 
-axs[0].imshow(img)  # отрисовываем оригинальное изображение
+axs[0].imshow(img)  
 axs[0].grid(False)
 
-axs[1].imshow(mask) # отрисовываем маску (одноканальное изображение, каждый класс отображается как отдельный цвет)
+axs[1].imshow(mask) 
 axs[1].grid(False)
 
 input_img_path = sorted(
@@ -74,8 +74,6 @@ batch_size = 16
 img_size = (256, 256)
 num_classes = 2 # 2 класса: фон и сегментированый объект
 
-# Генератор для перебора данных (в виде массивов Numpy)
-
 class datasetGenerator(keras.utils.Sequence):
 
     def __init__(self, batch_size, img_size, input_img_path, target_img_path, num_classes = num_classes):
@@ -97,10 +95,10 @@ class datasetGenerator(keras.utils.Sequence):
         batch_input_img_path = self.input_img_path[idx*self.batch_size:(idx+1)*self.batch_size]
         batch_target_img_path = self.target_img_path[idx*self.batch_size:(idx+1)*self.batch_size]
 
-        # Создадим массив numpy, заполненный нулями, для входных данных формы (BATCH_SIZE, IMAGE_HEIGHT, IMAGE_WIDTH, 3) и типа данных float32
+        # Создадим массив numpy, заполненный нулями, для входных данных формы (BATCH_SIZE, IMAGE_HEIGHT, IMAGE_WIDTH, 3)
         x = np.zeros((self.batch_size, *self.img_size, 3), dtype="float32")
 
-        # Создадим массив numpy, заполненный нулями, для выходных данных формы (BATCH_SIZE, IMAGE_HEIGHT, IMAGE_WIDTH, 1) и типа данных uint8
+        # Создадим массив numpy, заполненный нулями, для выходных данных формы (BATCH_SIZE, IMAGE_HEIGHT, IMAGE_WIDTH, 1)
         y = np.zeros((self.batch_size, *self.img_size, num_classes), dtype="uint8")
 
         # В цикле заполняем массивы с изображениями x и y
@@ -108,16 +106,15 @@ class datasetGenerator(keras.utils.Sequence):
         # zip возвращает для нескольких последовательностей список кортежей из элементов последовательностей с одинаковыми индексами
         for _, paths in enumerate(zip(batch_input_img_path, batch_target_img_path)):
 
-            # Загружаем изображение и маску используя путь файловой системы
-            img = np.array(load_img(paths[0], target_size=self.img_size, color_mode='rgb'))         # 3 канала для изображения
-            mask = np.array(load_img(paths[1], target_size=self.img_size, color_mode='grayscale'))  # 1 канал для маски
+            img = np.array(load_img(paths[0], target_size=self.img_size, color_mode='rgb'))         
+            mask = np.array(load_img(paths[1], target_size=self.img_size, color_mode='grayscale'))  
             mask = mask / 255
-            x[_] = img / 255 # нормализуем изображение
-            y[_] = to_categorical(mask, num_classes=num_classes) # преобразует маску из целых чисел в двоичную матрицу класса
+            x[_] = img / 255 
+            y[_] = to_categorical(mask, num_classes=num_classes) 
 
         return x, y
       
-# Расщепим наш датасет  на обучающую и проверочные выборки
+
 train_input_img_path = input_img_path[:1500]
 train_target_img_path = target_img_path[:1500]
 
@@ -141,42 +138,39 @@ def convolution_operation(entered_input, filters=64):
 
     return acti2
 
-# Функция кодировщика
-# На входе 2 параметра - предыдущий слой и число фильтров (генерируемых карт признаков)
 def encoder(entered_input, filters=64):
 
-    encod1 = convolution_operation(entered_input, filters)  # функция свертки - 2 синих блока
-    MaxPool1 = MaxPooling2D(strides = (2,2))(encod1)        # зеленый блок
-    return encod1, MaxPool1 # функция возвращает латеральное соединение и выход из слоя
+    encod1 = convolution_operation(entered_input, filters) 
+    MaxPool1 = MaxPooling2D(strides = (2,2))(encod1)        
+    return encod1, MaxPool1 
 
-# Функция декодировщика
 def decoder(entered_input, skip, filters=64):
     Upsample = Conv2DTranspose(filters, (2, 2), strides=2, padding="same")(entered_input) 
     Connect_Skip = Concatenate()([Upsample, skip])                                        
     out = convolution_operation(Connect_Skip, filters)                                    
-    return out # функция возвращает выход из слоя
-
+    return out 
+  
 # модель U-net
 def U_Net(img_size, num_classes):
     # Входной слой - желтый блок
     inputs = Input(img_size)
 
-    # Задаем блоки кодировщика и латеральные соединения
+    
     skip1, encoder_1 = encoder(inputs, 64)
     skip2, encoder_2 = encoder(encoder_1, 64*2)
     skip3, encoder_3 = encoder(encoder_2, 64*4)
     skip4, encoder_4 = encoder(encoder_3, 64*8)
 
-    # Бутылочное горлышка задаем 2-мя синими блоками
+
     conv_block = convolution_operation(encoder_4, 64*16)
 
-    # Задаем блоки декодировщика и передаем ему латеральные соединения от кодировщиков
+    
     decoder_1 = decoder(conv_block, skip4, 64*8)
     decoder_2 = decoder(decoder_1, skip3, 64*4)
     decoder_3 = decoder(decoder_2, skip2, 64*2)
     decoder_4 = decoder(decoder_3, skip1, 64)
 
-    # Выходной слой (фиолетовый блок), его конфигурация зависит от решаемой задачи
+   
     outputs = Conv2D(num_classes, kernel_size = (1, 1), padding="same", activation="softmax")(decoder_4)
 
     model = Model(inputs, outputs)
@@ -221,10 +215,8 @@ for index in range(10):
     img = np.array(load_img(val_input_img_path[index], target_size=(256, 256), color_mode='rgb')) 
     mask = np.array(load_img(val_target_img_path[index], target_size=(256, 256), color_mode='grayscale'))
 
-    # Запускаем модель в режиме предсказания
     test = model.predict(np.expand_dims(img, 0) / 255)
 
-    # Выбираем наиболее веротный класс
     test = np.argmax(test, axis=-1)
 
     display([img.reshape(1, 256, 256, 3)[0], mask, test[0]])  
